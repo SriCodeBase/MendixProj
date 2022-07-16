@@ -1,0 +1,3 @@
+com\org\mendix\gitHubPOC\GitHubAPI_GetContent_Example.class
+com\org\mendix\gitHubPOC\service\gitHubVar.class
+com\org\mendix\gitHubPOC\gitHubConnect.class
