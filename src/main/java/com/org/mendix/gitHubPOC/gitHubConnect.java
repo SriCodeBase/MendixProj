@@ -52,14 +52,7 @@ public class gitHubConnect implements Serializable {
 
         JavaSparkContext javaSparkContext = new JavaSparkContext(spark.sparkContext());
 
-        /*
-        adding checkpoint to load the dataframe to AWS S3 bucket
-        Providing access key, Secret access key and Endpoint
-         */
-        /*spark.sparkContext().hadoopConfiguration().set("fs.s3a.access.key","ACCESSKEY");
-        spark.sparkContext().hadoopConfiguration().set("fs.s3a.secret.key","SECRET ACCESS KEY");
-        spark.sparkContext().hadoopConfiguration().set("fs.s3a.endpoint", "s3.amazonaws.com");*/
-
+      
         // Using GITHUB java client API, to read the repo
         GitHubClient client = new GitHubClient();
         RepositoryService service = new RepositoryService(client);
