@@ -107,6 +107,7 @@ public class gitHubConnect implements Serializable {
             //Create Data frame
             Dataset<Row> df = spark.createDataFrame(rowRDD, schema);
             // filter data frame to the specific date
+
             filteredDf = df.filter(" Commit_Date between '01-07-2022' and  '15-07-2022' ");
             filteredDf.withColumn("Row_Created", functions.lit(curentTimeNow.toString()));
 
