@@ -52,7 +52,7 @@ public class gitHubConnect implements Serializable {
 
         JavaSparkContext javaSparkContext = new JavaSparkContext(spark.sparkContext());
 
-      
+
         // Using GITHUB java client API, to read the repo
         GitHubClient client = new GitHubClient();
         RepositoryService service = new RepositoryService(client);
@@ -115,8 +115,7 @@ public class gitHubConnect implements Serializable {
 
 
             System.out.println(filteredDf.showString(10, 0, false));
-            // appending on S3
-            //filteredDf.write().format("csv").mode("overwrite").save("s3a://medixseimens-proj/sample1.csv");
+
             // saving data to Hive dB
             //filteredDf.write().mode("append").saveAsTable("gitHub_History");
         }
