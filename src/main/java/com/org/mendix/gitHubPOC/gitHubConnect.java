@@ -19,13 +19,11 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -56,8 +54,6 @@ public class gitHubConnect implements Serializable {
         // Using GITHUB java client API, to read the repo
         GitHubClient client = new GitHubClient();
         RepositoryService service = new RepositoryService(client);
-       //service.getClient().setOAuth2Token("AUTHTOKEN");
-        //List<Repository> repositories = service.getRepositories();
         RestTemplate restTemplate = new RestTemplate();
 
         // Setting up the headers to read the repo configs
@@ -67,7 +63,7 @@ public class gitHubConnect implements Serializable {
         HttpEntity<String> entity = new HttpEntity<String>("parameters", headers);
 
         // Using Rest service- Hitting the required Git HUB URL
-        List<Map> response = restTemplate.exchange("https://api.github.com/users/SriCodeBase/repos", HttpMethod.GET, entity, List.class).getBody();
+        List<Map> response = restTemplate.exchange("https://api.github.com/users/bambulab/repos", HttpMethod.GET, entity, List.class).getBody();
 
         Date date = new Date();
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
@@ -109,11 +105,6 @@ public class gitHubConnect implements Serializable {
             // filter data frame to the specific date
 
             filteredDf = df.filter(" Commit_Date between '01-07-2022' and  '15-07-2022' ");
-            filteredDf.withColumn("Row_Created", functions.lit(curentTimeNow.toString()));
-
-
-
-
             System.out.println(filteredDf.showString(10, 0, false));
 
             // saving data to Hive dB
@@ -131,42 +122,41 @@ DB connection for PostgreSQL and inserting the Dataframe
  */
 
     public static void dbConnection (Dataset<Row> df) throws SQLException {
-        String postgreURL = "jdbc:postgresql://localhost:5432/mendix";
-        String userName = "postgres";
-        String password = "Srini@6655";
-        Connection connnection = DriverManager.getConnection(postgreURL,userName,password);
-        System.out.println("connected to DB");
-        Statement statement = connnection.createStatement();
-        AtomicInteger rowsupdate = new AtomicInteger();
-        df.foreach(data ->{
-          // System.out.println(data.get(0) + "-" + data.get(1));
-            String insertSql = "INSERT INTO GITHUB_HIS (name,email,commit_date,commit_message,commit_id,row_created_date)" +
-                    " VALUES (" +
-                    data.get(0) +
-                    data.get(1) +
-                    data.get(2) +
-                    data.get(3)+
-                    data.get(4)+
-                    data.get(5);
-            statement.executeUpdate(insertSql);
-            rowsupdate.incrementAndGet();
+        Connection connnection = null;
+        final ResultSet[] resultSet = {null};
+        int resultCount = 0;
+        try{
+            String postgreURL = "jdbc:postgresql://localhost:5432/mendix";
+            String userName = "postgres";
+            String password = "Srini@6655";
+             connnection = DriverManager.getConnection(postgreURL,userName,password);
+            System.out.println("connected to DB");
+            Statement statement = connnection.createStatement();
+            AtomicInteger rowsupdate = new AtomicInteger();
+            Row[] result = df.collectAsList().toArray(new Row[0]);
 
-        });
-        if(rowsupdate.get() >0){
-            System.out.println("rows insrted -"+rowsupdate.get());
+            for (Row row : result) {
+                String insertSql = "INSERT INTO GITHUB_HIS (name,email,commit_date,commit_message,commit_id)" +
+                        " VALUES ("
+                        + "'"+ row.get(0) + "',"+
+                         "'"+ row.get(1) +"',"+
+                         "'"+ row.get(2) +"',"+
+                         "'"+ row.get(3)+"',"+
+                         "'"+ row.get(4)+"')";
+                System.out.println(insertSql);
+                resultCount =  statement.executeUpdate(insertSql);
+            }
+
+            if(resultCount >0){
+                System.out.println("rows insrted -"+resultCount);
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            //if (connection != null) try { connection.close(); } catch (SQLException logOrIgnore) {}
+            connnection.close();
         }
 
-       /* String insertSql = "INSERT INTO GITHUB_HIS (name,email,commit_date,commit_message,commit_id,row_created_date)" +
-                " VALUES ('VISHAL','DUMMY_2','13-12-2022','MESSAGE','345','12-4-2022')";*/
-       // Statement statement = connnection.createStatement();
-
-        //PreparedStatement preparedStatement = connnection.prepareStatement(INSERT_USERS_SQL));
-        //int rows = statement.executeUpdate(insertSql);
-
-        /*if (rows > 0){
-            System.out.println("inserted successfully");
-        }*/
-        connnection.close();
     }
 
 
